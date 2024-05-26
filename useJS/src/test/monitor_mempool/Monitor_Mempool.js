@@ -18,7 +18,7 @@ const toAddress = [
 ];
 
 // All interfaces that meet the requirements
-let txHashs = [];
+let txHashs = new Set();
 
 const iface = new ethers.Interface([
     "function transfer(address,uint) public returns (bool)",
@@ -54,19 +54,22 @@ async function decodeTx(txHash) {
     }
 }
 
+let pendingPromise = null;
 
 async function listen_Pending() {
+    
+    console.log(`\n It is listening => ${ALCHEMY_MAINNET_WSSURL} \n`);  
 
     provider.on("pending", async (txHash) => {
-
         if (txHash) {
             try {
-                let result = await decodeTx(txHash);
+                pendingPromise = decodeTx(txHash);
+                let result = await pendingPromise;
                 let from = result.fromAddress;
                 let to = result.toAddress;
                 if (fromAddress.includes(from) && toAddress.includes(to)) {
-                    txHashs.push(txHash);
-                    console.log(`[${(new Date).toLocaleTimeString()}] 监听Pending交易: ${txHash} \r`);
+                    txHashs.add(txHash);
+                    console.log(`[${(new Date).toLocaleTimeString()}] 监听到相关Pending交易: ${txHash} \r`);
                     console.log(`[${result.fromAddress} ----${result.signature}----> ${result.toAddress}] amount:${result.value}ETH \n`);
                 } 
             } catch(e) {
@@ -82,20 +85,24 @@ async function listen_Succeed() {
     provider.on("block", async (blockNumber) => {
 
         let block = await provider.getBlock(blockNumber, true);
-        // console.log(block)
+
+        if (pendingPromise) {
+            await pendingPromise;
+        }
 
         let res = block.prefetchedTransactions;
         for (let i = 0; i < res.length; i++) {
             // console.log(await provider.getTransaction(res[0].hash))
             let txHash = res[i].hash;
             console.log(txHashs);
-            if (txHash.includes(txHash)) {
+            if (txHashs.has(txHash)) {
                 provider.getTransactionReceipt(txHash).then((receipt) => {
                     if (receipt.status === 1) {
                         console.log('Transaction was successful.');
                     } else {
                         console.log('Transaction failed.');
                     }
+                    // txHashs.delete(txHash); // 移除已处理的 txHash 以避免重复处理
                 })
             }
         }
@@ -106,8 +113,28 @@ async function listen_Succeed() {
 async function main() {
     await listen_Pending()
     await listen_Succeed()
+    // setTimeout(listen_Pending, 1000);
+    // setTimeout(listen_Succeed, 2000);
 }
+
 await main()
 
 
 
+// let arr = new set();
+
+// async function a() {
+//     // dui arr进行一系列的增删改查
+//     arr.add();
+// }
+
+// async function b() {
+//     arr.forEach(value => {
+//         console.log(value);
+//       });
+// }
+
+// async function test() {
+//     await a();
+//     await b();
+// }

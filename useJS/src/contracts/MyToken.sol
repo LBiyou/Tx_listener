@@ -8,7 +8,9 @@ contract MyToken is ERC20, Ownable {
     constructor(address initialOwner)
         ERC20("MyToken", "MTK")
         Ownable(initialOwner)
-    {}
+    {
+        _mint(msg.sender, 1 ether);
+    }
 
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
