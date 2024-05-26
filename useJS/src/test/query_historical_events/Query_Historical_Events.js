@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import config from "dotenv";
 
-config.config({path: "./.env"});
+config.config({path: "../../.env"});
 
 // the RPC of network
 const NET_URL = process.env.LOCAL_RPC;

@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import config from "dotenv";
 
-config.config();
+config.config({path: "../../.env"});
 
 // the RPC of network
 const NET_URL = process.env.LOCAL_RPC;
@@ -37,7 +37,7 @@ async function listen() {
 
         contract_MyToken.on(filterTo, async (res) => {
             // output the result of transaction
-            console.log(`from:${res.args[0]} -> to:${res.args[1]} value:${ethers.formatUnits(ethers.getBigInt(res.args[2], 18), 18)} ETH`);
+            console.log(`[${(new Date).toLocaleTimeString()}] from:${res.args[0]} -> to:${res.args[1]} value:${ethers.formatUnits(ethers.getBigInt(res.args[2], 18), 18)} ETH`);
             
             // No need, because listening to an event indicates successful execution.
             // let txHash = res.log.transactionHash;
